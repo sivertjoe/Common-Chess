@@ -1,6 +1,5 @@
 (in-package #:chess)
 
-
 (defun legal-movement (dx dy)
   (or 
 	(and 
@@ -13,12 +12,8 @@
 
 
 (defun legal-knight-move(color board start stop)
-  (multiple-value-bind (start-x start-y) (get-coords start)
-	(multiple-value-bind (stop-x stop-y) (get-coords stop)
-	  (let ((dx (- stop-x start-x))
-			(dy (- stop-y start-y)))
+  (multiple-value-bind (dx dy) (get-square-diff start stop)
 		(and (legal-movement dx dy) (no-collision color stop board))
-		  )
-			))
+    )
   )
 

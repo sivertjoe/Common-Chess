@@ -1,7 +1,5 @@
 ;;;; chess.lisp
-
 (in-package #:chess)
-
 
 
 ; Global Variables
@@ -53,7 +51,7 @@
   )
 
 ; p-color p-id from to cap-id promote-id en-passant
-(defun log-move(piece from-square to-square board)
+(defun create-log-entry(piece from-square to-square board)
   (let ((move (create-move  (piece-color piece) 
 							(piece-id piece)
 							from-square
@@ -67,7 +65,7 @@
 
 ; fixes some edge
 (defun evaluate-move(move piece from-square to-square board)
-  (let ((log-entry (log-move piece from-square to-square board)))
+  (let ((log-entry (create-log-entry piece from-square to-square board)))
 	(cond
 	  ((eq move +en-passant+)
 	     (setf log-entry (set-en-passant log-entry 1))
@@ -90,6 +88,8 @@
 	)
   )
 
+
+
 (defun update ()
   (cond
 	((and (eq *piece* 0) (mouse-click)) ; if no piece is held and left mouse is pressed
@@ -103,27 +103,33 @@
 	   (multiple-value-bind (x-pos y-pos) (mouse-piece-pos +piece-width+ +piece-height+) ; Moving a piece around
 		 (setf *piece* (piece-move *piece* x-pos y-pos)))
 
-	   (let ((stop-square (mouse-square +square-width+ +square-height+))) ; let go of mouse left
-		 (let ((move (legal-move *piece* *turn* *board* *piece-start-square* stop-square *log*)))
-			 (if move
-			   (progn 
-				 (setf (aref *board* stop-square) (piece-place *piece* stop-square)) ; Move the piece to the square
+	   (let* ((stop-square (mouse-square +square-width+ +square-height+))
+			  (move (legal-move *piece* *turn* *board* *piece-start-square* stop-square *log*))) ; let go of mouse left
+
+		 (if move
+		   (progn 
+			 (setf (aref *board* stop-square) (piece-place *piece* stop-square)) ; Move the piece to the square
 				 
-			     ; Log the move, check for stuff like en-passant and capture first
-				 (push 
-				   (evaluate-move move *piece* *piece-start-square* stop-square *board*) 
-				   *log*) 
+			 ; Log the move, check for stuff like en-passant and capture first
+			 (push
+			   (evaluate-move move *piece* *piece-start-square* stop-square *board*) 
+			   *log*) 
 
-				 ; Fix stuff like en-passant and castle
-				 (fix-edge-cases move *piece* stop-square *board*)
+				 
+			 ; Fix stuff like en-passant and castle
+			 (fix-edge-cases move *piece* stop-square *board*)
+			 (setf *turn* (flip *turn*))
+			 )	
+			 
+		   ; Place back
+		   (setf (aref *board* *piece-start-square*) (piece-place *piece* *piece-start-square*)))
 
-				 (setf *turn* (flip *turn*))
-				 )	
-			   ; Place back
-			   (setf (aref *board* *piece-start-square*) (piece-place *piece* *piece-start-square*))))
-
-		 (setf *piece* 0)
-		 ))))
+		 
+		 (setf *piece* 0) ; Piece is let go
+		 )
+	   )
+	 )
+	)
   )
 
 (defun main-loop (window surface)

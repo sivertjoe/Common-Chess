@@ -61,10 +61,9 @@
 
 
 
-
 (defun legal-move(piece turn board start-square stop-square logger)
-  (if (or (not (correct-color piece turn)) (eq start-square stop-square))
-	nil
+  (when (and (correct-color piece turn) (not (eq start-square stop-square)))
+	; Can't use case here??
     (cond 
 	  ((eq (piece-id piece) +pawn+) 
 	   (legal-pawn-move turn board start-square stop-square logger))

@@ -23,14 +23,11 @@
   )
 
 
+
 (defun get-square-diff (start stop)
   (multiple-value-bind (start-x start-y) (get-coords start)
 	(multiple-value-bind (stop-x stop-y) (get-coords stop)
-	  (let ((dx (- stop-x start-x))
-			(dy (- stop-y start-y)))
-		(values dx dy)
-
-		)
+	  (values (- stop-x start-x) (- stop-y start-y))
 	  )
 	)
   )
