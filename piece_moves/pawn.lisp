@@ -38,7 +38,7 @@
   )
 
 (defun pawned-moved-two (logger color stop)
-  (let ((last-move (car logger)))
+  (let ((last-move (log-pop logger)))
 	(unless (eq last-move nil)
 	  (and (eq (get-id last-move) +pawn+) 
 		   (moved-two last-move color stop)) ; if it was a pawn
@@ -101,3 +101,5 @@
 	  )
 	)
   )
+
+

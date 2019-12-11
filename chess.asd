@@ -14,8 +14,10 @@
   			   (:file "util")
   			   (:file "constants")
   			   (:file "piece")
+  			   (:file "log")
 
 
+  			   (:file "piece_moves/rook")
   			   (:file "piece_moves/bishop")
   			   (:file "piece_moves/knight")
   			   (:file "piece_moves/pawn")

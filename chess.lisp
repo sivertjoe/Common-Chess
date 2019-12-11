@@ -89,7 +89,6 @@
   )
 
 
-
 (defun update ()
   (cond
 	((and (eq *piece* 0) (mouse-click)) ; if no piece is held and left mouse is pressed
@@ -111,9 +110,9 @@
 			 (setf (aref *board* stop-square) (piece-place *piece* stop-square)) ; Move the piece to the square
 				 
 			 ; Log the move, check for stuff like en-passant and capture first
-			 (push
-			   (evaluate-move move *piece* *piece-start-square* stop-square *board*) 
-			   *log*) 
+			 (log-move
+			   *log*
+			   (evaluate-move move *piece* *piece-start-square* stop-square *board*))
 
 				 
 			 ; Fix stuff like en-passant and castle

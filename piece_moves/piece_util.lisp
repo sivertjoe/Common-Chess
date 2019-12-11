@@ -32,3 +32,20 @@
 	)
   )
 
+
+(defun check-path (color board start stop increment)
+  (let ((next start))
+	(loop 
+	  (setf next (+ next increment))
+
+	  (when (eq next stop)
+		(return (no-collision color next board))
+		)
+
+	  (when (and ; if next != stop and !square-clear { return false; }
+			  (not (eq next stop)) 
+			  (not (square-clear board next)))
+		(return nil))
+	  )
+	)
+  )

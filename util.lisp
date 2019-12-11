@@ -12,14 +12,19 @@
 
 (defun create-texture-set(path)
   (let ((textures (make-array '(12))))
-	(add-piece textures path "_pawn_w.bmp" (piece-get-texture-index +white+ +pawn+ ))
-	(add-piece textures path "_pawn_b.bmp" (piece-get-texture-index +black+ +pawn+ ))
+	(add-piece textures path "pawn_w.bmp" (piece-get-texture-index +white+ +pawn+ ))
+	(add-piece textures path "pawn_b.bmp" (piece-get-texture-index +black+ +pawn+ ))
 
 	(add-piece textures path "knight_w.bmp" (piece-get-texture-index +white+ +knight+ ))
 	(add-piece textures path "knight_b.bmp" (piece-get-texture-index +black+ +knight+ ))
 
 	(add-piece textures path "bishop_b.bmp" (piece-get-texture-index +black+ +bishop+ ))
 	(add-piece textures path "bishop_w.bmp" (piece-get-texture-index +white+ +bishop+ ))
+
+	(add-piece textures path "rook_b.bmp" (piece-get-texture-index +black+ +rook+ ))
+	(add-piece textures path "rook_w.bmp" (piece-get-texture-index +white+ +rook+ ))
+
+
 	textures
 	  )
  )
@@ -29,25 +34,65 @@
   )
 
 
+(defun start-square-and-y-pos (color)
+  (if (eq color +white+)
+	(values 8 600)
+	(values 48 100))
+  )
+
+(defun create-pawns (board color)
+  (let ((x 0))
+    (multiple-value-bind (start y ) (start-square-and-y-pos color)
+	  (loop repeat 8 do
+		(setf (aref board start) (piece-create color +pawn+ x y))
+		(setf start (+ start 1))
+		(setf x (+ x 100))
+	    )
+	  )
+    )
+  )
+
+(defun create-officers (board color p-type startw startb x1 x2 inc)
+  (let ((start 
+		  (if (eq color +white+) 
+			startw	
+			startb))
+		(y 
+		  (if (eq color +white+)
+			700
+			0)))
+	(setf (aref board start) (piece-create color p-type x1 y)) 
+	(setf (aref board (+ start inc)) (piece-create color p-type x2 y)) 
+	)
+  )
+
+(defun create-rooks (board color)
+  (create-officers board color +rook+ 0 56 0 700 7)
+  )
+
+(defun create-knights (board color)
+  (create-officers board color +knight+ 1 57 100 600 5)
+  )
+
+(defun create-bishops (board color)
+  (create-officers board color +bishop+ 2 58 200 500 3)
+  )
+
 (defun create-board-set()
   (let ((board (make-array '(64))))
-	(setf (aref board 15) (piece-create +white+ +pawn+ 700 600)) ; Create white pawn
-	(setf (aref board 14) (piece-create +white+ +pawn+ 600 600)) ; Create white pawn
-	(setf (aref board 13) (piece-create +white+ +pawn+ 500 600)) ; Create white pawn
-	(setf (aref board 12) (piece-create +white+ +pawn+ 400 600)) ; Create white pawn
-	(setf (aref board 11) (piece-create +white+ +pawn+ 300 600)) ; Create white pawn
-	(setf (aref board 10) (piece-create +white+ +pawn+ 200 600)) ; Create white pawn
-	(setf (aref board 9) (piece-create +white+ +pawn+ 100 600)) ; Create white pawn
-	(setf (aref board 8) (piece-create +white+ +pawn+ 0 600)) ; Create white pawn
+	(create-pawns board +white+)
+	(create-pawns board +black+)
 
-	(setf (aref board 1) (piece-create +white+ +knight+ 100 700))
-	(setf (aref board 62) (piece-create +black+ +knight+ 600 0)) 
+	(create-rooks board +white+)
+	(create-rooks board +black+)
 
-	(setf (aref board 51) (piece-create +black+ +pawn+ 300 100)) 
-	(setf (aref board 52) (piece-create +black+ +pawn+ 400 100)) 
+	(create-knights board +white+)
+	(create-knights board +black+)
 
-	(setf (aref board 2) (piece-create +white+ +bishop+ 200 700)) 
-	(setf (aref board 58) (piece-create +black+ +bishop+ 200 0)) 
+	(create-bishops board +white+)
+	(create-bishops board +black+)
+
+
 	board
 	)
 )
@@ -73,6 +118,9 @@
 
 	  ((eq (piece-id piece) +bishop+)
 	   (legal-bishop-move turn board start-square stop-square))
+
+	  ((eq (piece-id piece) +rook+)
+	   (legal-rook-move turn board start-square stop-square))
 	  )
 	)
   )
