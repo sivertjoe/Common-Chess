@@ -13,7 +13,7 @@
 
 (defun legal-knight-move(color board start stop)
   (multiple-value-bind (dx dy) (get-square-diff start stop)
-		(and (legal-movement dx dy) (no-collision color stop board))
+		(and (legal-movement dx dy) (square-landable color stop board))
     )
   )
 

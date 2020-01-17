@@ -59,6 +59,7 @@
 							(get-capture-id-if-capture board to-square)
 							0
 							0
+							0
 							)))
 	move)
   )
@@ -69,10 +70,43 @@
 	(cond
 	  ((eq move +en-passant+)
 	     (setf log-entry (set-en-passant log-entry 1))
-		 (setf log-entry (set-capture-id log-entry +pawn+))
-	   )
+		 (setf log-entry (set-capture-id log-entry +pawn+)))
+
+	  ((eq move +castle+)
+	     (setf log-entry (set-castle log-entry 1)))
 	  )	  
 	log-entry
+	)
+  )
+
+(defun move-rook (board rook-pos stop-square)
+  (let ((rook (aref board rook-pos)))
+	(piece-place rook stop-square)
+	rook
+	)
+  )
+
+(defun fix-castle (board square)
+  (cond 
+	; white short castle
+	((eql square 6)
+	 (setf (aref board 5) (move-rook board 7 5))
+	 (setf (aref board 7) 0))
+
+	; white long castle
+	((eql square 2)
+	 (setf (aref board 3) (move-rook board 0 3))
+	 (setf (aref board 0) 0))
+
+	; Black short castle
+	((eql square 62)
+	 (setf (aref board 61) (move-rook board 63 61))
+	 (setf (aref board 63) 0))
+
+	; Black long castle
+	((eql square 58)
+	 (setf (aref board 59) (move-rook board 56 59))
+	 (setf (aref board 56) 0))
 	)
   )
 
@@ -85,43 +119,66 @@
 		   0)
 	   )
 
-	)
+	((eq move +castle+)
+	   (fix-castle board to-square))
+	 )
+  )
+
+
+(defun touched-piece (piece)
+	(and (eq piece 0) (mouse-click)) ; if no piece is held and left mouse is pressed
+  )
+
+
+(defun holding-piece (piece)
+	(not (eq piece 0)) ; Holding a piece
+  )
+
+(defun move-piece (piece)
+	   (multiple-value-bind (x-pos y-pos) (mouse-piece-pos +piece-width+ +piece-height+) ; Moving a piece around
+		 (piece-move piece x-pos y-pos))
   )
 
 
 (defun update ()
   (cond
-	((and (eq *piece* 0) (mouse-click)) ; if no piece is held and left mouse is pressed
+
+	((touched-piece *piece*) ; if no piece is held and left mouse is pressed
 	 (let ((square (mouse-square +square-width+ +square-height+)))
 	   (setf *piece* (aref *board* square))
 	   (setf (aref *board* square) 0)
 	   (setq *piece-start-square* square)))
 
-	((not (eq *piece* 0)) ; Holding a piece
-	 (if (mouse-click) 
-	   (multiple-value-bind (x-pos y-pos) (mouse-piece-pos +piece-width+ +piece-height+) ; Moving a piece around
-		 (setf *piece* (piece-move *piece* x-pos y-pos)))
 
+	((holding-piece *piece*) 
+	 (if (mouse-click) ; Hasn't dropped the piece
+	   (move-piece *piece*)
+
+
+
+	   ; Let go of piece
 	   (let* ((stop-square (mouse-square +square-width+ +square-height+))
-			  (move (legal-move *piece* *turn* *board* *piece-start-square* stop-square *log*))) ; let go of mouse left
+			  (move (legal-move *piece* *turn* *board* *piece-start-square* stop-square *log*))) 
 
-		 (if move
+		 (if move ; If we got a move that was legal
 		   (progn 
-			 (setf (aref *board* stop-square) (piece-place *piece* stop-square)) ; Move the piece to the square
-				 
-			 ; Log the move, check for stuff like en-passant and capture first
-			 (log-move
-			   *log*
-			   (evaluate-move move *piece* *piece-start-square* stop-square *board*))
+		     (piece-place *piece* stop-square)
+			 (board-place-piece *board* *piece* stop-square)
 
-				 
 			 ; Fix stuff like en-passant and castle
 			 (fix-edge-cases move *piece* stop-square *board*)
+
+			 (setf move (evaluate-move move *piece* *piece-start-square* stop-square *board*))
+
+			 (log-move *log* move)
 			 (setf *turn* (flip *turn*))
+				 
 			 )	
 			 
-		   ; Place back
-		   (setf (aref *board* *piece-start-square*) (piece-place *piece* *piece-start-square*)))
+		   (progn
+		     ; Place back
+		     (piece-place *piece* *piece-start-square*)
+		     (board-place-piece *board* *piece* *piece-start-square*)))
 
 		 
 		 (setf *piece* 0) ; Piece is let go

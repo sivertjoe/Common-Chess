@@ -14,19 +14,14 @@
 (defvar +id-bits+ 7)
 (defvar +square-bits+ 63)
 
-;(defvar +color+  27)
-;(defvar +id+ 25)
-; (defvar +square-from+ 19)
-; (defvar +square-to+  13)
-; (defvar +cap-id+ 10)
-
 
 (defvar +id-len+ 3)
 (defvar +square-len+ 6)
 
 
-(defvar +en-passant+                                0)
-(defvar +promotion+    (+ +en-passant+  +single-bit+))
+(defvar +m-en-passant+                                0)
+(defvar +m-castle+     (+ +m-en-passant+ +single-bit+))
+(defvar +promotion+    (+ +m-castle+  +single-bit+))
 (defvar +cap-id+       (+ +promotion+   +id-len+))
 (defvar +square-to+    (+ +cap-id+      +id-len+))
 (defvar +square-from+  (+ +square-to+   +square-len+))
@@ -76,16 +71,21 @@
 (defun get-promotion-id (val) (get-value val +id-bits+ +promotion+))
 
 
-(defun set-en-passant (val ep) (include-value val ep +en-passant+))
-
-(defun get-en-passant (val) (get-value val +single-bit+ +en-passant+))
-
+(defun set-en-passant (val ep) (include-value val ep +m-en-passant+))
+(defun get-en-passant (val) (get-value val +single-bit+ +m-en-passant+))
 
 
+(defun set-castle (val ep) (include-value val ep +m-castle+))
+(defun get-castle (val) (get-value val +single-bit+ +m-castle+))
 
-(defun create-move (p-color p-id from to cap-id promote-id en-passant)
+
+
+
+(defun create-move (p-color p-id from to cap-id promote-id en-passant castle)
   (let ((move (set-color p-color)))
     
+	(set-castle 
+
     (set-en-passant 
       
       (set-promotion-id 
@@ -106,6 +106,8 @@
       promote-id) 
         
     en-passant)
+
+	castle)
     )
   )
 

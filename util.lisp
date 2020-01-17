@@ -2,7 +2,7 @@
 
 
 (defun correct-color (piece turn)
-  (eq (piece-color piece) turn)
+  (eql (piece-color piece) turn)
   )
 
 
@@ -23,6 +23,12 @@
 
 	(add-piece textures path "rook_b.bmp" (piece-get-texture-index +black+ +rook+ ))
 	(add-piece textures path "rook_w.bmp" (piece-get-texture-index +white+ +rook+ ))
+
+	(add-piece textures path "queen_b.bmp" (piece-get-texture-index +black+ +queen+ ))
+	(add-piece textures path "queen_w.bmp" (piece-get-texture-index +white+ +queen+ ))
+
+	(add-piece textures path "king_b.bmp" (piece-get-texture-index +black+ +king+ ))
+	(add-piece textures path "king_w.bmp" (piece-get-texture-index +white+ +king+ ))
 
 
 	textures
@@ -54,11 +60,11 @@
 
 (defun create-officers (board color p-type startw startb x1 x2 inc)
   (let ((start 
-		  (if (eq color +white+) 
+		  (if (eql color +white+) 
 			startw	
 			startb))
 		(y 
-		  (if (eq color +white+)
+		  (if (eql color +white+)
 			700
 			0)))
 	(setf (aref board start) (piece-create color p-type x1 y)) 
@@ -78,6 +84,19 @@
   (create-officers board color +bishop+ 2 58 200 500 3)
   )
 
+
+(defun royal-square(piece-type color)
+  (if (eq piece-type +queen+)
+	(if (eq color +white+)
+	  3
+	  56)
+	(if (eq color +white+)
+	  4
+	  57)
+	)
+  )
+
+
 (defun create-board-set()
   (let ((board (make-array '(64))))
 	(create-pawns board +white+)
@@ -92,14 +111,26 @@
 	(create-bishops board +white+)
 	(create-bishops board +black+)
 
+	(setf (aref board 3) (piece-create +white+ +queen+ 300 700)) 
+	(setf (aref board 59) (piece-create +black+ +queen+ 300 0)) 
+
+
+	(setf (aref board 4) (piece-create +white+ +king+ 400 700)) 
+	(setf (aref board 60) (piece-create +black+ +king+ 400 0)) 
+
 
 	board
 	)
 )
 
 
+(defun board-place-piece (board piece square)
+	(setf (aref board square) piece)  
+  )
+
+
 (defun flip (n)
-  (if (eq n 1)
+  (if (eql n 1)
 	0
 	1)
   )
@@ -110,17 +141,23 @@
   (when (and (correct-color piece turn) (not (eq start-square stop-square)))
 	; Can't use case here??
     (cond 
-	  ((eq (piece-id piece) +pawn+) 
+	  ((eql (piece-id piece) +pawn+) 
 	   (legal-pawn-move turn board start-square stop-square logger))
 
-	  ((eq (piece-id piece) +knight+)
+	  ((eql (piece-id piece) +knight+)
 	   (legal-knight-move turn board start-square stop-square))
 
-	  ((eq (piece-id piece) +bishop+)
+	  ((eql (piece-id piece) +bishop+)
 	   (legal-bishop-move turn board start-square stop-square))
 
-	  ((eq (piece-id piece) +rook+)
+	  ((eql (piece-id piece) +rook+)
 	   (legal-rook-move turn board start-square stop-square))
+
+	  ((eql (piece-id piece) +queen+)
+	   (legal-queen-move turn board start-square stop-square))
+
+	  ((eql (piece-id piece) +king+)
+	   (legal-king-move turn board start-square stop-square logger))
 	  )
 	)
   )

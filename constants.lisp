@@ -19,7 +19,18 @@
 
 (defvar +no-capture+ 6)
 (defvar +en-passant+ 0)
+(defvar +castle+ 1)
 
 
 (defvar +white+ 1)
 (defvar +black+ 0)
+
+
+(defvar +white-king-start+ 4)
+(defvar +white-short+ 6)
+(defvar +white-long+ 2)
+
+
+(defvar +black-king-start+ 60)
+(defvar +black-short+ 62)
+(defvar +black-long+ 58)

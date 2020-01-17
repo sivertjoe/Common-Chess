@@ -27,22 +27,16 @@
 						   (piece-id piece))
   )
 
-(defun make-rect-from-square (square)
+(defun piece-place (piece square)
   (let ((x (* (mod square 8) +square-width+))
 		(y (- (- +screen-height+ +square-height+) (* +square-height+ (nth-value 0 (floor square 8))))))
-	  (sdl2:make-rect x y +square-width+ +square-height+)
+	(piece-move piece x y)
     )
   )
 
-(defun piece-place (piece square)
-  (list (piece-color piece)
-		(piece-id piece)
-		(make-rect-from-square square))
-  )
 
 (defun piece-move (piece x y)
-  (list (piece-color piece) 
-		(piece-id piece) 
-		(sdl2:make-rect x y +square-width+ +square-height+))
+  (funcall (fdefinition '(setf sdl2:rect-x)) x (piece-rect piece))
+  (funcall (fdefinition '(setf sdl2:rect-y)) y (piece-rect piece))
   )
 

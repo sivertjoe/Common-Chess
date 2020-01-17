@@ -15,8 +15,11 @@
   			   (:file "constants")
   			   (:file "piece")
   			   (:file "log")
+  			   (:file "test")
 
 
+  			   (:file "piece_moves/king")
+  			   (:file "piece_moves/queen")
   			   (:file "piece_moves/rook")
   			   (:file "piece_moves/bishop")
   			   (:file "piece_moves/knight")

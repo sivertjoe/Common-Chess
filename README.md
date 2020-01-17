@@ -1,5 +1,6 @@
-To run common lisp compiler and quickload (Common lisp package manager) is needed.
+To run, a common lisp compiler and quickload (Common lisp package manager) is needed.
 
+Some common lisp compilers are:
 windows:
 	clisp
 
@@ -8,4 +9,4 @@ linux:
 
 
 to run: 
-$ [lisp compiler] --load build.lisp
+$ ./build.sh
