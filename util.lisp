@@ -12,24 +12,23 @@
 
 (defun create-texture-set(path)
   (let ((textures (make-array '(12))))
-	(add-piece textures path "pawn_w.bmp" (piece-get-texture-index +white+ +pawn+ ))
-	(add-piece textures path "pawn_b.bmp" (piece-get-texture-index +black+ +pawn+ ))
+	(add-piece textures path "pawn_w.bmp" (piece-get-texture-index +white+ +pawn+))
+	(add-piece textures path "pawn_b.bmp" (piece-get-texture-index +black+ +pawn+))
 
-	(add-piece textures path "knight_w.bmp" (piece-get-texture-index +white+ +knight+ ))
-	(add-piece textures path "knight_b.bmp" (piece-get-texture-index +black+ +knight+ ))
+	(add-piece textures path "knight_w.bmp" (piece-get-texture-index +white+ +knight+))
+	(add-piece textures path "knight_b.bmp" (piece-get-texture-index +black+ +knight+))
 
-	(add-piece textures path "bishop_b.bmp" (piece-get-texture-index +black+ +bishop+ ))
-	(add-piece textures path "bishop_w.bmp" (piece-get-texture-index +white+ +bishop+ ))
+	(add-piece textures path "bishop_b.bmp" (piece-get-texture-index +black+ +bishop+))
+	(add-piece textures path "bishop_w.bmp" (piece-get-texture-index +white+ +bishop+))
 
-	(add-piece textures path "rook_b.bmp" (piece-get-texture-index +black+ +rook+ ))
-	(add-piece textures path "rook_w.bmp" (piece-get-texture-index +white+ +rook+ ))
+	(add-piece textures path "rook_b.bmp" (piece-get-texture-index +black+ +rook+))
+	(add-piece textures path "rook_w.bmp" (piece-get-texture-index +white+ +rook+))
 
-	(add-piece textures path "queen_b.bmp" (piece-get-texture-index +black+ +queen+ ))
-	(add-piece textures path "queen_w.bmp" (piece-get-texture-index +white+ +queen+ ))
+	(add-piece textures path "queen_b.bmp" (piece-get-texture-index +black+ +queen+))
+	(add-piece textures path "queen_w.bmp" (piece-get-texture-index +white+ +queen+))
 
-	(add-piece textures path "king_b.bmp" (piece-get-texture-index +black+ +king+ ))
-	(add-piece textures path "king_w.bmp" (piece-get-texture-index +white+ +king+ ))
-
+	(add-piece textures path "king_b.bmp" (piece-get-texture-index +black+ +king+))
+	(add-piece textures path "king_w.bmp" (piece-get-texture-index +white+ +king+))
 
 	textures
 	  )
@@ -85,18 +84,6 @@
   )
 
 
-(defun royal-square(piece-type color)
-  (if (eq piece-type +queen+)
-	(if (eq color +white+)
-	  3
-	  56)
-	(if (eq color +white+)
-	  4
-	  57)
-	)
-  )
-
-
 (defun create-board-set()
   (let ((board (make-array '(64))))
 	(create-pawns board +white+)
@@ -136,38 +123,109 @@
   )
 
 
+(defun is-king-square (board color square)
+  (and 
+    (not (eq square 0))
+    (eql (piece-id square) +king+)
+    (eql (piece-color square) color)
+    )
+  )
 
-(defun legal-move(piece turn board start-square stop-square logger)
-  (when (and (correct-color piece turn) (not (eq start-square stop-square)))
-	; Can't use case here??
-    (cond 
-	  ((eql (piece-id piece) +pawn+) 
-	   (legal-pawn-move turn board start-square stop-square logger))
+(defun get-king-square (board color) 
+  (for:for ((square over board)) 
+		   (when (is-king-square board color square)
+			 (return (piece-square square))))
+  )
 
-	  ((eql (piece-id piece) +knight+)
-	   (legal-knight-move turn board start-square stop-square))
 
-	  ((eql (piece-id piece) +bishop+)
-	   (legal-bishop-move turn board start-square stop-square))
-
-	  ((eql (piece-id piece) +rook+)
-	   (legal-rook-move turn board start-square stop-square))
-
-	  ((eql (piece-id piece) +queen+)
-	   (legal-queen-move turn board start-square stop-square))
-
-	  ((eql (piece-id piece) +king+)
-	   (legal-king-move turn board start-square stop-square logger))
-	  )
-	)
+; For the king, knight, and pawn, they
+; _Have_ to capture the enemy piece to escape check
+(defun captured (piece stop)
+  (eql (piece-square piece) stop)
   )
 
 
 
+; Get the piece increment
+; if you hit the stop-square along the path it means you blocked the check
+; if you hit the king-square along the path you did not block the check.
+(defun block-path (piece king-square stop-square)
+    (let ((incr (get-piece-increment piece king-square))
+          (next (piece-square piece)))
+        (loop 
+          (setf next (+ next incr))
+
+          (when (eql next stop-square)
+            (return T))
+
+          (when (eql next king-square)
+            (return nil))
+          )
+      )
+  )
+
+; if we are in this function it means, we _are_ in check, now lets just check
+; if the new move un-checks us
+(defun un-check (attacking-piece king-square stop-square)
+  (or 
+    (captured attacking-piece stop-square)
+    (block-path attacking-piece king-square stop-square)
+    )
+   )
 
 
+(defun not-king-moves (piece turn board start-square stop-square logger check-piece)
+  (and 
+    (piece-legal-move piece turn board start-square stop-square logger)
 
+    (if check-piece
+      (un-check check-piece (get-king-square board turn) stop-square) 
+      (not (in-check board turn (get-king-square board turn) logger T))
+      )
+    )
+  )
 
+; piece = the piece that moved
+; turn  = the color of whose move it is
+; board = board
+; start-square & stop-square = yes
+; logger = yes
+; check-piece = if I am in check, this piece is checking me
+(defun legal-move(piece turn board start-square stop-square logger check-piece)
+  (when (or (not (correct-color piece turn)) (eql start-square stop-square))
+    (return-from legal-move nil))
 
+  (cond 
+    ((eql (piece-id piece) +king+)
+     (legal-king-move turn board start-square stop-square logger))
 
+    ((not (eql (piece-id piece) +king+))
+     (not-king-moves piece turn board start-square stop-square logger check-piece))
+    )
+  )
 
+(defun piece-legal-move(piece turn board start-square stop-square logger)
+  (piece-legal-move-id (piece-id piece) turn board start-square stop-square logger)
+  )
+
+(defun piece-legal-move-id(id turn board start-square stop-square logger)
+  (cond 
+    ((eql id +pawn+) 
+     (legal-pawn-move turn board start-square stop-square logger))
+
+    ((eql id +knight+)
+     (legal-knight-move turn board start-square stop-square))
+
+    ((eql id +bishop+)
+     (legal-bishop-move turn board start-square stop-square))
+
+    ((eql id +rook+)
+     (legal-rook-move turn board start-square stop-square))
+
+    ((eql id +queen+)
+     (legal-queen-move turn board start-square stop-square))
+
+    ((eql id +king+)
+     (legal-king-move turn board start-square stop-square logger))
+    )
+  )

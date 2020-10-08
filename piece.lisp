@@ -21,10 +21,24 @@
   (cadr piece)
   )
 
-
 (defun piece-index (piece)
   (piece-get-texture-index (piece-color piece) 
 						   (piece-id piece))
+  )
+
+
+(defun piece-pos (piece)
+  (values (sdl2:rect-x (piece-rect piece))
+		  (sdl2:rect-y (piece-rect piece)))
+  )
+
+(defun piece-square (piece)
+  (multiple-value-bind (x y) (piece-pos piece)
+	(let ((ax (x-axis-index x 100))
+		  (ay (y-axis-index y 100)))
+	  (+ (* 8 ay) ax)
+	  )
+	)
   )
 
 (defun piece-place (piece square)

@@ -47,7 +47,7 @@
 			(square-clear board stop)
 			(check-path color board start stop direction))
 	  (when (and 
-		(castle-check-check color board start stop direction)
+		(castle-check-check color board start stop direction logger)
 		(castle-right color logger start direction))
 		  +castle+
 		)
@@ -65,47 +65,19 @@
 	  )
   )
 
-(defun normal-move (color board start stop)
+(defun normal-move (color board start stop logger)
 	(and 
 	  (square-landable color stop board) 
-	  (not-in-check board color stop)
+	  (not (in-check board color stop logger))
 	  (moved-one-square start stop))
   )
 
+; if it you can castle for -> T, else nil, then !T = nil
 (defun legal-king-move (color board start stop logger)
   (if (tried-to-castle color start stop)
 	(castle color board start stop logger)
-	(normal-move color board start stop)
+	(normal-move color board start stop logger)
 	)
   )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

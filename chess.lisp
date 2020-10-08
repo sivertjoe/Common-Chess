@@ -13,6 +13,10 @@
 (defvar *piece-start-square* 0)
 (defvar *log* nil)
 
+(defvar *check-piece* nil)
+(defvar *check-square* -1)
+(defvar *red-texture* nil)
+
 
 
 
@@ -37,8 +41,27 @@
   (draw-piece surface *piece*)
 )
 
+(defun rect-from-square (square)
+    (let ((x (mod square 8))
+          (y (- 7 (nth-value 0 (floor (/ square 8))))))
+      (sdl2:make-rect (* 100 x) (* 100 y) +square-width+ +square-height+)
+      )
+  )
+
+(defun draw-check-square (surface)
+  (unless (eql *check-square* -1)
+	(sdl2:blit-surface *red-texture*
+					   nil 
+					   surface 
+					   (rect-from-square *check-square*))
+        
+    )
+)
+
+
 (defun draw(surface)
   (draw-board surface)  
+  (draw-check-square surface)
   (draw-pieces surface)
 )
 
@@ -140,69 +163,85 @@
   )
 
 
+(defun check-if-prev-move-made-check (board logger turn)
+  (let ((prev (log-pop logger)))
+    (when prev
+      (piece-legal-move-id (get-id prev) (flip turn) board (get-to-square prev) (get-king-square board turn) logger)
+      )
+    )
+  )
+
 (defun update ()
   (cond
 
-	((touched-piece *piece*) ; if no piece is held and left mouse is pressed
-	 (let ((square (mouse-square +square-width+ +square-height+)))
-	   (setf *piece* (aref *board* square))
-	   (setf (aref *board* square) 0)
-	   (setq *piece-start-square* square)))
+    ((touched-piece *piece*) ; if no piece is held and left mouse is pressed
+     (let ((square (mouse-square +square-width+ +square-height+)))
+       (setf *piece* (aref *board* square))
+       (setf (aref *board* square) 0)
+       (setq *piece-start-square* square)))
 
 
-	((holding-piece *piece*) 
-	 (if (mouse-click) ; Hasn't dropped the piece
-	   (move-piece *piece*)
+    ((holding-piece *piece*) 
+     (if (mouse-click) ; Hasn't dropped the piece
+       (move-piece *piece*)
+
+    
+
+       ; Let go of piece
+       (let* ((stop-square (mouse-square +square-width+ +square-height+))
+              (move (legal-move *piece* *turn* *board* *piece-start-square* stop-square *log* *check-piece*)))
+
+         (if move ; If we got a move that was legal
+           (progn 
+             (piece-place *piece* stop-square)
+             (board-place-piece *board* *piece* stop-square)
+
+             ; Fix stuff like en-passant and castle
+             (fix-edge-cases move *piece* stop-square *board*)
+
+             (setf move (evaluate-move move *piece* *piece-start-square* stop-square *board*))
+
+             (log-move *log* move)
+             (setf *turn* (flip *turn*))
+
+             (if (check-if-prev-move-made-check *board* *log* *turn*)
+               (progn
+                 (setf *check-square* (get-king-square *board* *turn*))
+                 (setf *check-piece* *piece*))
+               (progn
+                 (setf *check-square* -1)
+                 (setf *check-piece* nil))
+               )
+             )	
+
+           (progn
+             ; Place back
+             (piece-place *piece* *piece-start-square*)
+             (board-place-piece *board* *piece* *piece-start-square*)))
 
 
-
-	   ; Let go of piece
-	   (let* ((stop-square (mouse-square +square-width+ +square-height+))
-			  (move (legal-move *piece* *turn* *board* *piece-start-square* stop-square *log*))) 
-
-		 (if move ; If we got a move that was legal
-		   (progn 
-		     (piece-place *piece* stop-square)
-			 (board-place-piece *board* *piece* stop-square)
-
-			 ; Fix stuff like en-passant and castle
-			 (fix-edge-cases move *piece* stop-square *board*)
-
-			 (setf move (evaluate-move move *piece* *piece-start-square* stop-square *board*))
-
-			 (log-move *log* move)
-			 (setf *turn* (flip *turn*))
-				 
-			 )	
-			 
-		   (progn
-		     ; Place back
-		     (piece-place *piece* *piece-start-square*)
-		     (board-place-piece *board* *piece* *piece-start-square*)))
-
-		 
-		 (setf *piece* 0) ; Piece is let go
-		 )
-	   )
-	 )
-	)
+         (setf *piece* 0) ; Piece is let go
+         )
+       )
+     )
+    )
   )
 
 (defun main-loop (window surface)
   (sdl2:with-event-loop (:method :poll)
-    (:idle ()
-      
-	  (update)
-      (draw surface)
+                        (:idle ()
+                               (update)
+                               (draw surface)
 
-	  (sdl2:update-window window)
-    )
-    (:quit () t))
+                               (sdl2:update-window window)
+                               )
+                        (:quit () t))
   )
 
 
 (defun init ()
   (setq *board-image* (sdl2:load-bmp "assets/board.bmp"))
+  (setq *red-texture* (sdl2:load-bmp "assets/red.bmp"))
   (setf *board* (create-board-set))
   (setf *textures* (create-texture-set "assets/"))
 
@@ -210,25 +249,25 @@
   (setf *piece* 0)
   (setf *piece-start-square* 0)
   (setf *log* nil)
-)
+  )
 
 
 (defmacro with-window-surface ((window surface) &body body)
-    `(sdl2:with-init (:video)
-	(sdl2:with-window (,window
-						:title "Common-Chess"
-						:w +screen-width+
-						:h +screen-height+
-						:flags '(:shown))
-				(let ((,surface (sdl2:get-window-surface ,window)))
-				,@body)))
+  `(sdl2:with-init (:video)
+                   (sdl2:with-window (,window
+                                       :title "Common-Chess"
+                                       :w +screen-width+
+                                       :h +screen-height+
+                                       :flags '(:shown))
+                                     (let ((,surface (sdl2:get-window-surface ,window)))
+                                       ,@body)))
   )
 
 
 
 (defun start ()
   (with-window-surface (window surface)
-    (init)
-    (main-loop window surface))
-)
-  
+                       (init)
+                       (main-loop window surface))
+  )
+

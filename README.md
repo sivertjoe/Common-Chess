@@ -1,4 +1,6 @@
-To run, a common lisp compiler and quickload (Common lisp package manager) is needed.
+# Chess program writen in Common lisp
+
+You need a common lisp compiler and quickload
 
 Some common lisp compilers are:
 windows:

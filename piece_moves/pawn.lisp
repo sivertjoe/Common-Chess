@@ -54,7 +54,6 @@
 	  +en-passant+)
   )
 
-; TODO en-passant, create log and check the logger I guess?
 (defun one-square (color board dx start stop logger)
   (unless (> (abs dx) 1)
 	(if (eq dx 0) ; only moved one square up

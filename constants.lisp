@@ -34,3 +34,8 @@
 (defvar +black-king-start+ 60)
 (defvar +black-short+ 62)
 (defvar +black-long+ 58)
+
+
+(defvar +red+ 0)
+(defvar +green+ 1)
+
