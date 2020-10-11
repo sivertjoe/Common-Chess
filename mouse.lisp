@@ -19,6 +19,10 @@
 )
 
 
+(defun mouse-right-click ()
+  (sdl2:global-mouse-state-p 3)
+)
+
 (defun mouse-click ()
   (sdl2:global-mouse-state-p 1)
   )

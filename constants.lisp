@@ -1,41 +1,41 @@
 (in-package #:chess)
 
 
-(defvar +screen-width+ 800)
-(defvar +screen-height+ 800)
+(defparameter +screen-width+ 800)
+(defparameter +screen-height+ 800)
 
-(defvar +square-width+ (/ +screen-width+ 8))
-(defvar +square-height+ (/ +screen-height+ 8))
+(defparameter +square-width+ (/ +screen-width+ 8))
+(defparameter +square-height+ (/ +screen-height+ 8))
 
-(defvar +piece-width+ +square-width+)
-(defvar +piece-height+ +square-height+)
+(defparameter +piece-width+ +square-width+)
+(defparameter +piece-height+ +square-height+)
 
-(defvar +pawn+ 0)
-(defvar +knight+ 1)
-(defvar +bishop+ 2)
-(defvar +rook+ 3)
-(defvar +queen+ 4)
-(defvar +king+ 5)
+(defparameter +pawn+ 0)
+(defparameter +knight+ 1)
+(defparameter +bishop+ 2)
+(defparameter +rook+ 3)
+(defparameter +queen+ 4)
+(defparameter +king+ 5)
 
-(defvar +no-capture+ 6)
-(defvar +en-passant+ 0)
-(defvar +castle+ 1)
-
-
-(defvar +white+ 1)
-(defvar +black+ 0)
+(defparameter +no-capture+ 6)
+(defparameter +en-passant+ 0)
+(defparameter +castle+ 1)
 
 
-(defvar +white-king-start+ 4)
-(defvar +white-short+ 6)
-(defvar +white-long+ 2)
+(defparameter +white+ 1)
+(defparameter +black+ 0)
 
 
-(defvar +black-king-start+ 60)
-(defvar +black-short+ 62)
-(defvar +black-long+ 58)
+(defparameter +white-king-start+ 4)
+(defparameter +white-short+ 6)
+(defparameter +white-long+ 2)
 
 
-(defvar +red+ 0)
-(defvar +green+ 1)
+(defparameter +black-king-start+ 60)
+(defparameter +black-short+ 62)
+(defparameter +black-long+ 58)
+
+
+(defparameter +red+ 0)
+(defparameter +green+ 1)
 

@@ -1,5 +1,12 @@
 (in-package #:chess)
 
+(defmacro switch (var &rest rest)
+  (cond
+    ((null rest) nil)
+    (T `(if (eql ,var ,(first (first rest)))
+           (progn ,@(rest (first rest)))
+           (switch ,var ,@(rest rest))))))
+
 
 (defun correct-color (piece turn)
   (eql (piece-color piece) turn)
@@ -159,8 +166,7 @@
             (return T))
 
           (when (eql next king-square)
-            (return nil))
-          )
+            (return nil)))
       )
   )
 
@@ -174,16 +180,59 @@
    )
 
 
-(defun not-king-moves (piece turn board start-square stop-square logger check-piece)
-  (and 
-    (piece-legal-move piece turn board start-square stop-square logger)
 
+
+; This function checks if the piece moved is still on the attacking axis
+; First two conditions are rook like movements
+; Last two are bishop like movements
+(defun get-attacking-line-from-dx-dy (dx dy start stop)
+    (cond
+      ((eql dy 0)
+        (eql (get-board-rank start) (get-board-rank stop)))
+
+      ((eql dx 0)
+        (eql (get-board-file start) (get-board-file stop)))
+
+      ((or
+        (and (> dx 0) (> dy 0))
+        (and (< dx 0) (< dy 0)))
+        (eql (mod start 9) (mod stop 9)))
+
+      ((or 
+         (and (> dx 0) (< dy 0))
+         (and (< dx 0) (> dy 0)))
+         (eql (mod start 7) (mod stop 7)))))
+
+
+
+(defun stil-on-pin-line (king-square start-square stop-square)
+    (multiple-value-bind (dx dy) (get-square-diff start-square king-square)
+      (get-attacking-line-from-dx-dy dx dy start-square stop-square)))
+
+
+; if we enter this function it implies the king _is_ pinned
+; and we moved the piece that was pinned to the king
+(defun handle-pin-edge-case (board turn start-square stop-square king-square)
+  (or 
+    (move-captured board stop-square turn)
+    (stil-on-pin-line king-square start-square stop-square)))
+
+(defun not-king-move-was-legal (move turn board start-square stop-square logger check-piece)
+  (and  
+    move
     (if check-piece
       (un-check check-piece (get-king-square board turn) stop-square) 
-      (not (in-check board turn (get-king-square board turn) logger T))
-      )
-    )
+      (or 
+                                                                 ; Only check for discovered checks
+        (not (in-check board turn (get-king-square board turn) logger :option :discovered)) 
+        (handle-pin-edge-case board turn start-square stop-square (get-king-square board turn)))))
+
   )
+
+
+(defun not-king-moves (move turn board start-square stop-square logger check-piece)
+    (when (not-king-move-was-legal move turn board start-square stop-square logger check-piece)
+      move))
 
 ; piece = the piece that moved
 ; turn  = the color of whose move it is
@@ -195,37 +244,31 @@
   (when (or (not (correct-color piece turn)) (eql start-square stop-square))
     (return-from legal-move nil))
 
-  (cond 
-    ((eql (piece-id piece) +king+)
-     (legal-king-move turn board start-square stop-square logger))
-
-    ((not (eql (piece-id piece) +king+))
-     (not-king-moves piece turn board start-square stop-square logger check-piece))
-    )
+  (let ((move (piece-legal-move piece turn board start-square stop-square logger)))
+    (if (eql (piece-id piece) +king+)
+      move ; Legal king move handles check
+      (not-king-moves move turn board start-square stop-square logger check-piece)))
   )
 
 (defun piece-legal-move(piece turn board start-square stop-square logger)
-  (piece-legal-move-id (piece-id piece) turn board start-square stop-square logger)
-  )
+  (piece-legal-move-id (piece-id piece) turn board start-square stop-square logger))
 
 (defun piece-legal-move-id(id turn board start-square stop-square logger)
-  (cond 
-    ((eql id +pawn+) 
+  (switch id 
+    (+pawn+
      (legal-pawn-move turn board start-square stop-square logger))
 
-    ((eql id +knight+)
+    (+knight+
      (legal-knight-move turn board start-square stop-square))
 
-    ((eql id +bishop+)
+    (+bishop+
      (legal-bishop-move turn board start-square stop-square))
 
-    ((eql id +rook+)
+    (+rook+
      (legal-rook-move turn board start-square stop-square))
 
-    ((eql id +queen+)
+    (+queen+
      (legal-queen-move turn board start-square stop-square))
 
-    ((eql id +king+)
-     (legal-king-move turn board start-square stop-square logger))
-    )
-  )
+    (+king+
+     (legal-king-move turn board start-square stop-square logger))))

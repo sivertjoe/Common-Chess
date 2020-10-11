@@ -17,6 +17,9 @@
 (defvar *check-square* -1)
 (defvar *red-texture* nil)
 
+(defvar *yellow-texture* nil)
+(defvar *yellow-square* nil)
+
 
 
 
@@ -41,6 +44,7 @@
   (draw-piece surface *piece*)
 )
 
+; Hm why can't I use piece_util:get-coords here?
 (defun rect-from-square (square)
     (let ((x (mod square 8))
           (y (- 7 (nth-value 0 (floor (/ square 8))))))
@@ -48,15 +52,17 @@
       )
   )
 
+(defun get-or-create-yellow-rect (square)
+  (unless *yellow-square*
+    (setf *yellow-square* (rect-from-square square)))
+  *yellow-square*)
+
 (defun draw-check-square (surface)
   (unless (eql *check-square* -1)
-	(sdl2:blit-surface *red-texture*
+	(sdl2:blit-surface *yellow-texture*
 					   nil 
 					   surface 
-					   (rect-from-square *check-square*))
-        
-    )
-)
+					   (get-or-create-yellow-rect *check-square*))))
 
 
 (defun draw(surface)
@@ -180,6 +186,12 @@
        (setf (aref *board* square) 0)
        (setq *piece-start-square* square)))
 
+    ((and (mouse-right-click) (holding-piece *piece*))
+     (progn
+       ; Place piece back
+       (piece-place *piece* *piece-start-square*)
+       (board-place-piece *board* *piece* *piece-start-square*)
+       (setf *piece* 0)))
 
     ((holding-piece *piece*) 
      (if (mouse-click) ; Hasn't dropped the piece
@@ -210,7 +222,8 @@
                  (setf *check-piece* *piece*))
                (progn
                  (setf *check-square* -1)
-                 (setf *check-piece* nil))
+                 (setf *check-piece* nil)
+                 (setf *yellow-square* nil))
                )
              )	
 
@@ -242,6 +255,7 @@
 (defun init ()
   (setq *board-image* (sdl2:load-bmp "assets/board.bmp"))
   (setq *red-texture* (sdl2:load-bmp "assets/red.bmp"))
+  (setq *yellow-texture* (sdl2:load-bmp "assets/yellow.bmp"))
   (setf *board* (create-board-set))
   (setf *textures* (create-texture-set "assets/"))
 
