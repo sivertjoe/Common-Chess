@@ -11,9 +11,9 @@
   )
 
 
-(defun legal-knight-move(color board start stop)
+(defun legal-knight-move(color board start stop &key option)
   (multiple-value-bind (dx dy) (get-square-diff start stop)
-		(and (legal-movement dx dy) (square-landable color stop board))
+		(and (legal-movement dx dy) (or (square-landable color stop board) (eql option stop)))
     )
   )
 

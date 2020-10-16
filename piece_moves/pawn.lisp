@@ -54,7 +54,7 @@
 	  +en-passant+)
   )
 
-(defun one-square (color board dx start stop logger)
+(defun one-square (color board dx start stop logger &key option)
   (unless (> (abs dx) 1)
 	(if (eq dx 0) ; only moved one square up
 	  (eq (board-piece-p board stop) 0) ; Check that square is clear
@@ -62,7 +62,7 @@
 	  (let ((stop-piece (board-piece-p board stop))); moved one square to the side (capture)
 		(if (eq stop-piece 0)
 		  (check-en-passant color start stop logger)
-		  (not (eq (piece-color stop-piece) color)))
+		  (or (not (eq (piece-color stop-piece) color)) (eql option stop)))
 		  ))) 
   )
 
@@ -90,11 +90,11 @@
   )
 
 
-(defun legal-pawn-move(color board start stop logger)
+(defun legal-pawn-move(color board start stop logger &key option)
   (multiple-value-bind (dx dy) (get-square-diff start stop)
 	(unless (more-or-less-2-squares dy color)
 	  (case (abs dy)
-		(1 (one-square color board dx start stop logger))
+		(1 (one-square color board dx start stop logger :option option))
 		(2 (two-square color board dx start stop))
 		)
 	  )

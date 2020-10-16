@@ -85,8 +85,8 @@
   )
 
 
-(defun is-attacking (board square turn king-square logger)
-  (piece-legal-move square (flip turn) board (piece-square square) king-square logger)
+(defun is-attacking (board square turn king-square logger &key option)
+  (piece-legal-move square (flip turn) board (piece-square square) king-square logger :option option)
 )
 
 ; Check if any pieces attack the king square
@@ -108,7 +108,7 @@
                                T)
 
 
-                   (is-attacking board square color king-square logger))
+                   (is-attacking board square color king-square logger :option option))
 			 (return square)))
   )
 

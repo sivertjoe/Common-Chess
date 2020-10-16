@@ -10,8 +10,8 @@
   )
 
 
-(defun legal-queen-move (color board start stop)
-  (when (square-landable color stop board)
+(defun legal-queen-move (color board start stop &key option)
+  (when (or (square-landable color stop board) (eql option stop))
     (multiple-value-bind (dx dy) (get-square-diff start stop)
       (cond
         ((was-diagonal dx dy)

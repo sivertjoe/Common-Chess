@@ -96,12 +96,12 @@
 ; fixes some edge
 (defun evaluate-move(move piece from-square to-square board)
   (let ((log-entry (create-log-entry piece from-square to-square board)))
-	(cond
-	  ((eq move +en-passant+)
+	(switch move
+	  (+en-passant+
 	     (setf log-entry (set-en-passant log-entry 1))
 		 (setf log-entry (set-capture-id log-entry +pawn+)))
 
-	  ((eq move +castle+)
+	  (+castle+
 	     (setf log-entry (set-castle log-entry 1)))
 	  )	  
 	log-entry
@@ -168,6 +168,18 @@
 		 (piece-move piece x-pos y-pos))
   )
 
+(defun un-checked (board turn)
+  )
+
+(defun check-if-mate (board turn)
+  (for:for ((square over *board*))
+           (when (and 
+                   (not (eql square 0))
+                   (not (eql (piece-color square) turn)))
+             (un-checked board turn)
+           )
+           )
+  )
 
 (defun check-if-prev-move-made-check (board logger turn)
   (let ((prev (log-pop logger)))

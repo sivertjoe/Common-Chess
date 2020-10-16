@@ -250,25 +250,25 @@
       (not-king-moves move turn board start-square stop-square logger check-piece)))
   )
 
-(defun piece-legal-move(piece turn board start-square stop-square logger)
-  (piece-legal-move-id (piece-id piece) turn board start-square stop-square logger))
+(defun piece-legal-move(piece turn board start-square stop-square logger &key option)
+  (piece-legal-move-id (piece-id piece) turn board start-square stop-square logger :option option))
 
-(defun piece-legal-move-id(id turn board start-square stop-square logger)
+(defun piece-legal-move-id(id turn board start-square stop-square logger &key option)
   (switch id 
     (+pawn+
-     (legal-pawn-move turn board start-square stop-square logger))
+     (legal-pawn-move turn board start-square stop-square logger :option option))
 
     (+knight+
-     (legal-knight-move turn board start-square stop-square))
+     (legal-knight-move turn board start-square stop-square :option option))
 
     (+bishop+
-     (legal-bishop-move turn board start-square stop-square))
+     (legal-bishop-move turn board start-square stop-square :option option))
 
     (+rook+
-     (legal-rook-move turn board start-square stop-square))
+     (legal-rook-move turn board start-square stop-square :option option))
 
     (+queen+
-     (legal-queen-move turn board start-square stop-square))
+     (legal-queen-move turn board start-square stop-square :option option))
 
     (+king+
-     (legal-king-move turn board start-square stop-square logger))))
+     (legal-king-move turn board start-square stop-square logger :option option))))
